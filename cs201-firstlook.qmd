@@ -1,6 +1,6 @@
 ---
 title: "CS-201 First Look at R"
-author: "Amber Camp"
+author: "Shaylee Ferrer"
 date: 8/26/26
 format: html
 editor: visual
@@ -40,9 +40,70 @@ I don't recommend rearranging your pane layout at this time.
 
 Try running some code
 
+### Load Library
+
 ```{r}
+library(ggplot2)
 
+```
 
+### Some scripting
+
+```{r}
+#This is a comment
+#Here we are assigning a value to a variable
+quiz1 <- 88
+quiz2 <- 94
+quiz3 <- 79
+
+quiz1
+
+#getting the average
+(quiz1 + quiz2 + quiz3) / 3
+
+#getting the mean
+mean(quiz1 + quiz2 + quiz3) #wrong cause your just adding them
+mean(quiz1, quiz2, quiz3) #wrong cause it only returns the mean of the first argument
+mean(c(quiz1, quiz2, quiz3))
+
+#creatig a variable that holds info
+list <- (c(quiz1, quiz2, quiz3))
+mean(list) #makes it easier and less repetative
+
+average <- mean(list)
+
+quiz3 <- 99
+
+average
+
+list <- c(quiz1, quiz2, quiz3)
+average <- mean(list)
+round(average, 2)
+
+```
+
+### More Coding
+
+```{r}
+#ctr, opt, I makes a new code block
+scores <- c(88, 94, 79, 91, 85)
+scores
+
+mean(scores)
+
+min(scores) #minimum
+
+max(scores) #maximum
+
+length(scores) #number of things in the list
+
+summary(scores)
+
+students <- c("a", "b", "c", "d", "e")
+students
+
+#bar plot
+barplot(scores, names.arg = students)
 ```
 
 ## Introducing `ggplot2`
