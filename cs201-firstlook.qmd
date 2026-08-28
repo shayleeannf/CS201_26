@@ -99,17 +99,79 @@ length(scores) #number of things in the list
 
 summary(scores)
 
-students <- c("a", "b", "c", "d", "e")
+students <- c("Alice", "Bob", "Carter", "Dylan", "Ethan")
 students
 
 #bar plot
-barplot(scores, names.arg = students)
+barplot(scores, names.arg = students, ylim = c(0, 100), main = "Math Class", xlab = "Students", y = "Test Scores")
 ```
 
 ## Introducing `ggplot2`
 
+#### Make a Dataframe
+
 ```{r}
 
+grades_df <- data.frame(student = students, score = scores)
+
+grades_df
+
+summary(grades_df)
+
+nrow(grades_df) #number of rows
+ncol(grades_df) #number of collumns
+dim(grades_df) #dimensions
+
+```
+
+#### Try ggplot
+
+```{r}
+
+ggplot(data = grades_df, aes(x = student, y = score))
+
+ggplot(data = grades_df, aes(x = reorder(student, +score), y = score, group = 1)) +
+  geom_col(fill = "navy") +
+  geom_point() +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Math Class",
+       subtitle = "Quiz Chapter 1",
+       x = "Students",
+       y = "Scores")
+
+```
+
+#### Mutate the Dataframe
+
+```{r}
+
+library(tidyverse)
+
+            #get this by hitting comand+shift+M 
+grades_df <- grades_df |>
+  mutate(study_hours = c(2, 5, 1, 4, 3))
+
+```
+
+#### Make a Scatterplot
+
+```{r}
+
+ggplot(data = grades_df, aes(x = study_hours, y = score)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "lightblue") +
+  geom_point(color = "navy") +
+  theme_classic() +
+  labs(title = "Study Observations",
+       subtitle = "What do you see?",
+       x = "Study Hours",
+       y = "Student Scores") +
+  geom_line(color = "navy")
+
+  
+#cannot use fill (use color instead), don't use reorder
+  
 ```
 
 ## Extra Credit (1pt)
@@ -117,6 +179,18 @@ barplot(scores, names.arg = students)
 What result do you expect when you run this expression?
 
 ```{r}
+
+1+1+1
+
+quiz1+ quiz2
+
+options(scipen = 999)
+
+print(0.1, 20)
+print(0.5, 20)
+
+#why does it return that number?
+0.1 + 0.1 + 0.1 - 0.3
 
 ```
 
