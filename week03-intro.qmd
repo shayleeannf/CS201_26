@@ -1,8 +1,8 @@
 ---
 title: "CS201 - Introduction & Getting Started with R & RStudio"
 subtitle: "GitHub, warm-up, and a first look at mtcars"
-author: "Amber Camp"
-date: "2025-09-08"
+author: "Shaylee Ferrer"
+date: "Aug 31, 2026"
 format: html
 editor: visual
 ---
@@ -108,22 +108,36 @@ mtcars %>%
 Start by exploring the data below. It's always good to ensure you understand what is contained in your dataset.
 
 ```{r, message = FALSE}
+#| label: load data
+
 data(mtcars) # reads in the data & adds it to your environment as a dataframe
 mtcars
 
+mtcars <- mtcars |>
+  rownames_to_column("model_name")
+
+view(mtcars)
+summary(mtcars)
+?mtcars #opens help info
+head(mtcars)
+tail(mtcars)
 ```
 
 - 
 
   ## How many rows and columns are in the dataframe?
 
-- 
+- 32 rows
+
+- 12 columns
 
   ## What are the variables you see?
 
-- 
+mpg, cyl, disp, hp, drat, wt, qsec, vs, am, gear, carb
 
-  ## How might you view the last few rows of the dataframe with a single function?
+## How might you view the last few rows of the dataframe with a single function?
+
+- tail(mtcars)
 
 ### Quick Questions
 
@@ -131,21 +145,24 @@ mtcars
 
 ```{r, warning=FALSE}
 
+mean(mtcars) #wrong
+mean(mpg) #wrong
 
+mean(mtcars$mpg) #dollar sign lets you select a column in a dataframe
 ```
 
 - Can you find the mean of another variable?
 
 ```{r, warning=FALSE}
 
-
+mean(mtcars$cyl)
 ```
 
 - Can you find the median?
 
 ```{r, warning=FALSE}
 
-
+median(mtcars$disp)
 ```
 
 ### Quick Plot
@@ -155,6 +172,8 @@ Make a scatter plot of `mtcars` with `weight` on the x-axis and `mpg` on the y-a
 ```{r, warning=FALSE}
 # this is a scatterplot of mpg by wt
 
+ggplot(data = mtcars, aes(x = mpg, y = wt)) +
+  geom_point()
 
 ```
 
@@ -166,7 +185,31 @@ Try beautifying your plots using what you have learned so far.
 
 ```{r, warning=FALSE}
 
+?mtcars
 
+#Scatter Plot
+ggplot(data = mtcars, aes(x = cyl, y = qsec)) +
+  geom_point()
+
+```
+
+```{r}
+#Histogram
+ggplot(data = mtcars, aes(x = qsec)) +
+  geom_histogram()
+
+
+#convert am to factor by creating new am_f variable
+mtcars <- mtcars |> 
+  mutate(am_f = factor(am, labels = c("auto", "manual")))
+
+class(mtcars$am_f)
+
+ggplot(data = mtcars, aes(x = am)) +
+  geom_histogram()
+
+ggplot(data = mtcars, aes(x = am_f)) +
+  geom_boxplot()
 ```
 
 Save, stage, commit, and push to GitHub!!
