@@ -1,0 +1,172 @@
+---
+title: "CS201 - Introduction & Getting Started with R & RStudio"
+subtitle: "GitHub, warm-up, and a first look at mtcars"
+author: "Amber Camp"
+date: "2025-09-08"
+format: html
+editor: visual
+---
+
+## Welcome Back!
+
+- Quick check-in: Who still needs help getting R, RStudio, and Git installed?
+- Plan for today:
+  - Revisit: R vs. RStudio
+  - Git vs GitHub & why we care
+  - Base R vs. tidyverse (conceptual only)
+  - Play with `mtcars`
+
+## R vs. RStudio
+
+What is the difference between R and RStudio and why do you need to have both for this class?
+
+- **R** is the programming language and engine
+- **RStudio** is the IDE (Integrated Development Environment –your workspace) that makes using R easier
+- You *can* run R without RStudio, but you probably wouldn’t want to (ask me how I know)
+
+## Git vs. GitHub
+
+Similarly, remember that Git and GitHub are *not the same thing*.
+
+- **Git**: Tracks changes to your code locally on your computer
+- **GitHub**: Hosts your Git repositories online for sharing, backup, and collaboration
+- Together: You can track your work + share it with others
+
+## Extra Credit Question (from last time)
+
+Who was able to figure out why `0.1 + 0.1 + 0.1 - 0.3 ≠ 0`?
+
+Try it!
+
+```{r}
+0.1 + 0.1 + 0.1 - 0.3
+0.3 - 0.1 - 0.1 - 0.1 # a variation
+
+# run this if you want to avoid scientific notation
+options(scipen = 999)
+```
+
+Explanation:
+
+- **Computers store numbers in binary (base-2)**, not decimal (base-10)
+
+- Some decimal fractions — like `0.1` and `0.3` — **cannot be represented exactly** in binary
+
+  - Think of how 1/3 can’t be written exactly as a finite decimal (0.3333… forever)
+
+- When you add and subtract these approximations, you get a result that’s very close to zero, but not exactly
+
+- This isn’t a bug! It’s how computers handle decimal math. The answer is *almost* zero, just not perfectly, because 0.1 can’t be stored exactly in binary
+
+- You can check for "closeness" by using `all.equal(0.1 + 0.1 + 0.1, 0.3)` (should equal `TRUE`)
+
+------------------------------------------------------------------------
+
+# Let's get started!
+
+## Install & Load packages
+
+This gives you access to packages/libraries, which are like custom/specialized tools so that you can do more with R.
+
+```{r, message = FALSE}
+# install.packages("tidyverse")
+library(tidyverse)
+```
+
+## Quick note on Base R vs. `tidyverse`
+
+- **Base R**: built-in functions, available immediately
+- **`tidyverse`**: collection of modern packages with consistent syntax
+- **`tidyverse`** is considered the modern way to interact with R, and this will be our focus
+
+### Example
+
+Both of the following create a table from the dataset `mtcars` with columns for `mpg` and `hp`, filtering for 6 cylinder models and `mpg` \> 20.
+
+**Base R:**
+
+```{r, message = FALSE}
+mtcars[mtcars$cyl == 6 & mtcars$mpg > 20, c("mpg", "hp")]
+```
+
+**tidyverse:**
+
+```{r, message = FALSE}
+mtcars %>%
+  filter(cyl == 6, mpg > 20) |> # reminder that %>% is the same thing
+  select(mpg, hp)
+```
+
+- Base R uses bracket notation and logical conditions
+- `tidyverse` uses verbs like `filter()` and `select()` chained with pipes for readability
+- Base R powerful and always available. `tidyverse` makes code more expressive and human-readable, especially for multi-step data wrangling (it's often easier to use!)
+
+## First Look: `mtcars`
+
+`mtcars` is a classic, built-in dataset. If you've learned R before, you've probably interacted with `mtcars`.
+
+Start by exploring the data below. It's always good to ensure you understand what is contained in your dataset.
+
+```{r, message = FALSE}
+data(mtcars) # reads in the data & adds it to your environment as a dataframe
+mtcars
+
+```
+
+- 
+
+  ## How many rows and columns are in the dataframe?
+
+- 
+
+  ## What are the variables you see?
+
+- 
+
+  ## How might you view the last few rows of the dataframe with a single function?
+
+### Quick Questions
+
+- What is the average `mpg` overall?
+
+```{r, warning=FALSE}
+
+
+```
+
+- Can you find the mean of another variable?
+
+```{r, warning=FALSE}
+
+
+```
+
+- Can you find the median?
+
+```{r, warning=FALSE}
+
+
+```
+
+### Quick Plot
+
+Make a scatter plot of `mtcars` with `weight` on the x-axis and `mpg` on the y-axis. Use what you learned last class!
+
+```{r, warning=FALSE}
+# this is a scatterplot of mpg by wt
+
+
+```
+
+## Exit Ticket
+
+Create a scatter plot and histogram of two variables of your choice (try to make it different from above). For your histogram, use `geom_histogram` and only assign an x variable in your `aes`.
+
+Try beautifying your plots using what you have learned so far.
+
+```{r, warning=FALSE}
+
+
+```
+
+Save, stage, commit, and push to GitHub!!
