@@ -155,7 +155,7 @@ mean(mtcars$mpg) #dollar sign lets you select a column in a dataframe
 
 ```{r, warning=FALSE}
 
-mean(mtcars$cyl)
+mean(mtcars$cyl) 
 ```
 
 - Can you find the median?
