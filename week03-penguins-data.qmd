@@ -197,6 +197,14 @@ The magic of `ggplot2` is simplicity and *customization* so let's customize, bas
 
 ```{r, message=FALSE, warning=FALSE}
 
+ggplot(data = penguins_data, aes(x = flipper_length_mm, fill = species)) +
+  geom_histogram(alpha = 0.85) + #alpha changes transparancy
+  scale_fill_manual(values = c("darkorange", "darkorchid", "cyan4"), name = "Species Type") + #entering the colors manually
+  theme_bw() +
+  labs(title = "Palmer Penguins' Flipper Length",
+       subtitle = "Three species observed on three islands in the Palmer Archipelago",
+       x = "Flipper Length (mm)",
+       y = "Number of Penguins")
 
 
 ```
@@ -205,14 +213,23 @@ Manually choosing colors is cool, but there are also color palettes available fo
 
 ```{r, message=FALSE}
 
-
-
+ggplot(data = penguins_data, aes(x = flipper_length_mm, fill = species)) +
+  geom_histogram(alpha = 0.85) + #alpha changes transparancy
+  scale_fill_viridis_d(option = "inferno", name = "Species Type") + #entering colors through viridis scale
+  theme_bw() +
+  labs(title = "Palmer Penguins' Flipper Length",
+       subtitle = "Three species observed on three islands in the Palmer Archipelago",
+       x = "Flipper Length (mm)",
+       y = "Number of Penguins")
+ 
 ```
 
 Let's investigate flipper length with another type of data viz: a box plot!
 
 ```{r, message=FALSE}
 
+ggplot(data = penguins_data, aes(y = flipper_length_mm, fill = species)) +
+  geom_boxplot()
 
 
 ```
@@ -221,7 +238,17 @@ Again, let's customize! Add points for individual penguins.
 
 ```{r, message=FALSE}
 
-
+ggplot(data = penguins_data, aes(x = species, y = flipper_length_mm, fill = species)) +
+  geom_boxplot() +
+  geom_jitter(size = 0.5) +
+  theme_bw() +
+  scale_fill_manual(values = c("darkorange", "darkorchid", "cyan4"), name = "Species Type") +
+  labs(title = "Palmer Penguins' Flipper Length",
+       subtitle = "Three species observed on three islands in the Palmer Archipelago",
+       x = "Flipper Length (mm)",
+       y = "Number of Penguins") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1), legend.position = "none") + #angles the names and changes the position of the words, legend "none" removes the legend
+  coord_flip()
 
 ```
 
@@ -229,7 +256,9 @@ Awesome! Let's take a look at flipper length and it's relationship to body mass
 
 ```{r, message=FALSE}
 
-
+ggplot(data = penguins_data, aes(x = flipper_length_mm, y = body_mass_g, color = species, shape = island)) +
+  geom_point() +
+  scale_shape_manual(values = c(1, 2, 3))
 
 ```
 
@@ -237,7 +266,7 @@ Cool! Let's add species to this plot. What about island?
 
 ```{r, message=FALSE}
 
-
+#above example
   
 ```
 
@@ -249,8 +278,15 @@ Cool! Let's add species to this plot. What about island?
 
 ```{r, message=FALSE, warning=FALSE}
 
-
-
+ggplot(data = penguins_data, aes(x = culmen_depth_mm, fill = species)) +
+  geom_histogram() +
+  theme_bw() +
+  scale_fill_viridis_d(option = "inferno") +
+  labs(title = "Palmer Penguins' Culmen Depth",
+       subtitle = "Three species observed on three islands in the Palmer Archipelago",
+       x = "Culmen Depth (mm)",
+       y = "Number of Penguins")
+  
 ```
 
 - Part 2
@@ -260,6 +296,14 @@ Cool! Let's add species to this plot. What about island?
 ```{r, message=FALSE, warning=FALSE}
 
 
+ggplot(data = penguins_data, aes(x = culmen_depth_mm, y = body_mass_g, color = species)) +
+  geom_point() +
+  theme_bw() +
+  scale_color_viridis_d(option = "inferno") +
+  labs(title = "Palmer Penguins' Culmen Depth Compared to Body Mass",
+       subtitle = "Three species observed on three islands in the Palmer Archipelago",
+       x = "Culmen Depth (mm)",
+       y = "Number of Penguins")
 
 ```
 
@@ -275,8 +319,18 @@ Cool! Let's add species to this plot. What about island?
 
 ```{r, message=FALSE}
 
-
-
+boxplot <- ggplot(data = penguins_data, aes(x = species, y = flipper_length_mm, fill = species)) +
+  geom_boxplot() +
+  geom_jitter(size = 0.5) +
+  theme_bw() +
+  scale_fill_manual(values = c("darkorange", "darkorchid", "cyan4"), name = "Species Type") +
+  labs(title = "Palmer Penguins' Flipper Length",
+       subtitle = "Three species observed on three islands in the Palmer Archipelago",
+       x = "Flipper Length (mm)",
+       y = "Number of Penguins") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1), legend.position = "none") + #angles the names and changes the position of the words, legend "none" removes the legend
+  coord_flip()
+ggplotly(boxplot)
 ```
 
 ## Push to GitHub!
