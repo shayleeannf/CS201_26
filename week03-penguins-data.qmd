@@ -158,8 +158,8 @@ What other packages/functions do a similar thing?
 
 install.packages("DataExplorer")
 
-introduce(penguins_data)
-plot_intro(penguins_data)
+#introduce(penguins_data)
+#plot_intro(penguins_data)
 ```
 
 - We'll leave the rest for you to explore individually on your own time.
@@ -331,6 +331,19 @@ boxplot <- ggplot(data = penguins_data, aes(x = species, y = flipper_length_mm, 
   theme(axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1), legend.position = "none") + #angles the names and changes the position of the words, legend "none" removes the legend
   coord_flip()
 ggplotly(boxplot)
+```
+
+```{r}
+###Part 3: second example
+histogram <- ggplot(data = penguins_data, aes(x = culmen_depth_mm, fill = species)) +
+  geom_histogram() +
+  theme_bw() +
+  scale_fill_viridis_d(option = "inferno") +
+  labs(title = "Palmer Penguins' Culmen Depth",
+       subtitle = "Three species observed on three islands in the Palmer Archipelago",
+       x = "Culmen Depth (mm)",
+       y = "Number of Penguins")
+ggplotly(histogram)
 ```
 
 ## Push to GitHub!
