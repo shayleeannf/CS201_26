@@ -49,7 +49,7 @@ ggplot(data = penguins_data, aes(x = flipper_length_mm, y = body_mass_g, color =
 
 ```
 
-```{}
+```         
 ```
 
 Let's add one more variable: `sex`. Can you think of a way to add another dimension of information in these visuals?
@@ -144,7 +144,9 @@ How about if we wanted to make a bar graph of the *average body mass by species*
 ```{r}
 #| label: avg mass
 
-
+average_mass <- male_female_only |>
+  group_by(species) |>
+  summarise(average_mass = mean(body_mass_g))
 
 ```
 
@@ -153,7 +155,8 @@ How about if we wanted to make a bar graph of the *average body mass by species*
 ```{r}
 #| label: bar graph of avg mass
 
-
+ggplot(data = average_mass, aes(x = species, y = average_mass)) +
+  geom_bar(stat = "identity")
 
 ```
 
@@ -166,7 +169,9 @@ Bonus: If you assign this to a new object name, you can then use `view(object_na
 ```{r, message=FALSE}
 #| label: avg flipper length
 
-
+average_flipper_length <- male_female_only |>
+  group_by(species) |>
+  summarise(flipper_length = mean(flipper_length_mm))
 
 ```
 
@@ -175,7 +180,11 @@ In the code chunk below, plot `average_flipper_length` using `ggplot()` and `geo
 ```{r, message=FALSE}
 #| label: plot avg flipper length
 
-
+ggplot(data = average_flipper_length, aes(x = species, y = flipper_length, fill = species)) +
+  geom_bar(stat = "identity") +
+  theme_bw() +
+  labs(title = "Averge Flipper Length of Three Species of Penguins") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
   
 
 ```
@@ -189,8 +198,9 @@ Create a boxplot of body mass by species & make the plot interactive
 ```{r, message=FALSE, warning=FALSE}
 #| label: mass by species interactive
 
-
-
+boxplot <- ggplot(data = male_female_only, aes(x = species, y = body_mass_g, color = species)) +
+  geom_boxplot()
+ggplotly(boxplot)
 ```
 
 ## Exercise 3
@@ -202,8 +212,10 @@ How many penguins live on each `island`? This one is a little tricky–think out
 ```{r, message=FALSE}
 #| label: count penguins
 
-
-
+unique(male_female_only$island)
+count <- ggplot(data = male_female_only, aes(x = island, fill = island)) +
+  geom_histogram(stat = "count")
+ggplotly(count)
 ```
 
 ## Exercise 4
@@ -213,8 +225,11 @@ Create a data frame that has the average culmen depth for each species. Then, ma
 ```{r, message=FALSE}
 #| label: avg culmen depth by species
 
-
-
+final <- male_female_only |>
+  group_by(species) |>
+  summarise(average_culmen_depth = mean(culmen_depth_mm))
+ggplot(data = final, aes(x = species, y = average_culmen_depth)) +
+  geom_bar(stat = "identity")
 ```
 
 ## Push to GitHub!
