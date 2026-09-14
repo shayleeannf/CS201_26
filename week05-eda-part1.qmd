@@ -1,0 +1,399 @@
+---
+title: "Exploratory Data Analysis, part 1"
+author: "Amber Camp"
+date: "9/14/26"
+format: html
+editor: visual
+---
+
+## Exploratory Data Analysis
+
+This week, we're diving into visualization techniques to help you explore your data in a fun and structured way! Exploratory Data Analysis (or EDA, as some like to call it) is all about getting to know your data better. It’ll help you to explore the quality of your data, ask questions, seek out answers through visualizations, and even inspire more questions based on what you discover.
+
+We'll be practicing some tools/techniques you've already seen and will try a few new things. The final goal for the week will be for you to apply these techniques to your own data set.
+
+## Packages
+
+Run this once, then comment it back out. You don't want to reinstall a package every single time you render your document.
+
+```{r, eval=FALSE}\}
+#| label: install new package
+
+install.packages("datasauRus")
+```
+
+```{r, message=FALSE}
+#| label: load packages
+
+library(tidyverse)
+library(janitor)
+library(datasauRus)
+```
+
+## Data
+
+Read in the data and clean the column headers using janitor.
+
+```{r, message=FALSE}
+#| label: load data
+ 
+pokedata <- read_csv("data/Pokemon.csv")
+
+pokedata <- pokedata |> 
+  clean_names()
+```
+
+### Describe the data: Pokemon
+
+Data author: **ALBERTO BARRADAS**
+
+<https://www.kaggle.com/datasets/abcsds/pokemon?resource=download>
+
+Description: This is Pokemon data for 721 pokemon and their stats.
+
+How many observations (rows) are there? 800
+
+How many variables (columns) are there? 13
+
+### skimr: Quick overview
+
+```{r, message=FALSE}
+#| label: skimr overview
+
+skim_data <- skimr::skim(pokedata)
+view(skim_data)
+
+```
+
+### Summary: Quick overview
+
+```{r, message=FALSE}
+#| label: data summary
+
+summary(pokedata)
+
+```
+
+With the summary, we can confirm what `skimr` told us: some of the data is in a class that will not be helpful for analysis.
+
+### Class types
+
+- **numeric** – numbers with decimals (e.g. `3.14`, `-10.5`)
+
+- **integer** – whole numbers (e.g. `1`, `42`)
+
+- **character** – text strings (e.g. `"amphibian"`, `"CS-201"`)
+
+- **logical** – Boolean values: `TRUE` or `FALSE`
+
+- **factor** – categorical variables with defined levels (e.g. `"low"`, `"medium"`, `"high"`)
+
+- **Date** – calendar dates (e.g. `as.Date("2026-09-14")`)
+
+Let's take a closer look at changing classes below.
+
+### Categorical vs. Continuous
+
+Categorical variables represent discrete groups or labels (e.g., type, name), while continuous variables can take on any numeric value within a range (e.g., speed, body mass (from `penguins`)).
+
+```{r, message=FALSE, results='hide'}
+#| label: categorical vs continuous
+
+class(pokedata$number) # checks class
+pokedata$number <- as.factor(pokedata$number) # converts to factor
+class(pokedata$number) # check class again
+summary(pokedata$number) # review the data in this variable
+
+# the reason I am converting to factor above is because I have looked at the data and decided that I want to treat the data as categorical rather than numeric. they are numbers, but they are id numbers related to each pokemon--not ordinal, measurements, or counts, etc. 
+
+pokedata$type_1 <- as.factor(pokedata$type_1)
+class(pokedata$type_1)
+summary(pokedata$type_1)
+
+pokedata$name <- as.factor(pokedata$name)
+pokedata$type_2 <- as.factor(pokedata$type_2)
+pokedata$generation <- as.factor(pokedata$generation)
+
+skim_data <- skimr::skim(pokedata)
+
+summary(pokedata$legendary)
+
+# here, i went ahead and converted the other variables to factor where it applies. this can be done at anytime. you can also convert back later at any point, if you need
+```
+
+How many categorical variables are there? 5
+
+How many numeric variables are there? 7
+
+How many legendary? 65
+
+## Describing your data with numbers
+
+Before we plot anything, let's practice summarizing data *numerically*. Plots show you shape; numbers give you something you can report, compare, and put in a table.
+
+### Counting categorical variables
+
+For categorical variables, the most useful summary is usually just a count. `count()` does this, and `sort = TRUE` puts the most common category first.
+
+```{r, message=FALSE}
+#| label: counting categorical variables
+
+#gives you the count of how many variables in each column
+pokedata |> 
+  count(type_1, sort = TRUE) 
+
+# you can count combinations of variables, too
+pokedata |> 
+  count(generation, legendary)
+
+```
+
+### Summarizing numeric variables
+
+For numeric variables, we want measures of **center** (where is the middle?) and **spread** (how far do values wander from the middle?).
+
+- **mean** – the mathematical average. Sensitive to outliers.
+
+- **median** – the middle value when sorted. Resistant to outliers.
+
+- **sd** (standard deviation) – typical distance from the mean.
+
+- **IQR** (interquartile range) – the range of the middle 50% of the data.
+
+- **min** / **max** – the extremes.
+
+`summarise()` collapses a whole column down to a single value. You can ask for several at once:
+
+```{r, message=FALSE}
+#| label: summarizing numerical variables
+
+pokedata |> 
+  summarise(
+    n      = n(),
+    mean   = mean(sp_atk),
+    median = median(sp_atk),
+    sd     = sd(sp_atk),
+    iqr    = IQR(sp_atk),
+    min    = min(sp_atk),
+    max    = max(sp_atk))
+
+```
+
+**Question!** The mean and the median are not the same number here. What does it mean when the mean is *larger* than the median?
+
+Answer: skewed to the right - there are more values that are higher than the median in our dataset.
+
+## Variation and Covariation
+
+Variation refers to how the values *within* a variable can differ from one measurement to another.
+
+Covariation describes how two variables change together; when one variable changes, the other tends to change in a specific way, either increasing or decreasing in relation to it. This is *between* variables.
+
+Let's start by looking at the distribution of Pokemon by Special Attack (`sp_atk`) using a histogram. We'll get back to variation in a bit.
+
+### Variation
+
+```{r, message=FALSE}
+#| label: distribution histogram
+
+ggplot(pokedata, aes(x = sp_atk)) +
+  geom_histogram(binwidth = 5)
+
+```
+
+Notice that this histogram is showing you the same information you just calculated (center, spread, skew) but as a *shape* instead of as numbers.
+
+**Question!** What is the difference between a histogram and a bar chart?\
+Answer: Histogram is used for continuous data, bar chart is used for categorical data.
+
+```{r, message=FALSE}
+#| label: bar chart
+
+ggplot(pokedata, aes(x = type_1)) + # note that type_1 is categorical
+  geom_bar()
+
+```
+
+Compare this bar chart to the `count(type_1)` table you made earlier. Same information, two different formats.
+
+### Pause for exploratory questions
+
+When you generate a visual for EDA, you should pause to see what the data is telling you, and perhaps ask yourself questions like:
+
+- Does your visualization match your expectations?
+
+- Which values are the most common? Why?
+
+- Which values are the least common? Why?
+
+- Do you see any unusual patterns? What could explain them?
+
+## Take a closer look
+
+Use code that you've already seen elsewhere to focus on certain "regions" of interest in your data.
+
+```{r}
+#| label: histogram (selective)
+
+pokedata_0_100 <- pokedata |> 
+  filter(sp_atk <= 100)
+
+ggplot(pokedata_0_100, aes(x = sp_atk)) +
+  geom_histogram(binwidth = 4) +
+  scale_x_continuous(breaks = seq(from = 0, to = 110, by = 5)) +
+  theme_bw()
+```
+
+## Looking at outliers and unusual data
+
+Outliers are unusual observations that don’t quite fit the overall pattern of the data. They can arise from data entry mistakes, can represent extreme values that were recorded during data collection, or can even indicate significant new discoveries.
+
+```{r, message=FALSE}
+#| label: outliers
+
+ggplot(pokedata, aes(x = sp_atk)) + 
+  geom_histogram(binwidth = 5)
+
+```
+
+### Zoom in using `coord_cartesian()`
+
+Define a window to take a closer look. You can also add an `xlim()` argument.
+
+```{r, message=FALSE}
+#| label: zooming in
+
+ggplot(pokedata, aes(x = sp_atk)) + 
+  geom_histogram() +
+  coord_cartesian(ylim = c(0, 10), xlim = c(150, 200))
+
+```
+
+## Your turn: try it all again with `sp_def`
+
+You've now seen the full sequence on `sp_atk`: summarize it numerically, plot the distribution, then zoom in on the tail. Do the same thing for Special Defense (`sp_def`) on your own.
+
+Step 1: summarize `sp_def` numerically.
+
+```{r, message=FALSE}
+
+
+pokedata |> 
+  summarise(
+    mean   = mean(sp_def),
+    median = median(sp_def),
+    sd     = sd(sp_def),
+    iqr    = IQR(sp_def),
+    min    = min(sp_def),
+    max    = max(sp_def))
+```
+
+Step 2: plot the distribution.
+
+```{r, message=FALSE}
+
+ggplot(pokedata, aes(x = sp_def)) + 
+  geom_histogram(binwidth = 5)
+```
+
+Step 3: zoom in on the upper tail using `coord_cartesian()`.
+
+```{r, message=FALSE}
+
+ggplot(pokedata, aes(x = sp_def)) + 
+  geom_histogram() +
+  coord_cartesian(ylim = c(0, 20), xlim = c(150, 275))
+```
+
+Is `sp_def` more or less skewed than `sp_atk`? How can you tell from the numbers alone?
+
+## How about a scatter plot to see how they correlate?
+
+### Covariation
+
+```{r}
+#| label: scatter plot
+
+ggplot(pokedata, aes(x = sp_atk, y = sp_def)) + 
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE)
+```
+
+We can also put a number on that relationship. The **correlation coefficient** ranges from -1 to 1: values near 1 mean the two variables increase together, values near -1 mean one goes up as the other goes down, and values near 0 mean there's no linear relationship.
+
+```{r}
+#| label: evaluation correlation
+
+cor(pokedata$sp_atk, pokedata$sp_def)
+
+# or, in the tidyverse style
+pokedata |> 
+  summarise(correlation = cor(sp_atk, sp_def))
+```
+
+Does that number match what you see in the scatterplot?
+
+## How about some boxplots?
+
+One for `sp_atk`:
+
+```{r, message=FALSE}
+#| label: box plot atk
+
+atk_boxplot <- ggplot(data = pokedata, aes(y = sp_atk)) +
+  geom_boxplot() +
+  facet_wrap(~generation)
+
+atk_boxplot
+```
+
+Another for `sp_def`:
+
+```{r, message=FALSE}
+#| label: box plot def
+
+def_boxplot <- ggplot(data = pokedata, aes(y = sp_def)) +
+  geom_boxplot() +
+  facet_wrap(~generation)
+
+def_boxplot
+```
+
+### Question for next class:
+
+- How do you read a boxplot, and what are the different landmarks?
+
+## Extra Credit!
+
+- Share with the class how to read a boxplot (1pt each!)
+
+------------------------------------------------------------------------
+
+## Before you go: a puzzle
+
+The `datasauRus` package contains 13 small datasets, each with an `x` and a `y` variable. Let's summarize all 13 of them at once using everything we learned today.
+
+```{r, message=FALSE}
+#| label: datasauRus
+
+datasaurus_dozen |> 
+  group_by(dataset) |> 
+  summarise(
+    n      = n(),
+    mean_x = mean(x),
+    mean_y = mean(y),
+    sd_x   = sd(x),
+    sd_y   = sd(y),
+    corr   = cor(x, y)) |> 
+  mutate(across(where(is.numeric), \(x) round(x, 2)))
+
+
+```
+
+Look carefully at that table. Every dataset has the same number of observations, the same mean in x and y, the same standard deviation in x and y, and the same correlation out to two decimal places.
+
+**So: what do these 13 datasets look like?**
+
+Write down your guess here before Wednesday. Be specific.
+
+Your guess:
