@@ -1,0 +1,203 @@
+---
+title: "CS-201 First Look at R"
+author: "Shaylee Ferrer"
+date: 8/26/26
+format: html
+editor: visual
+toc: true
+---
+
+This is the first class session walking through code together!
+
+We will be programming in R and in this class will primarily use `qmd` documents to keep things tidy and presentable. Each code chunk below is where you will run R code. Feel free to add notes as we go along.
+
+## Navigating RStudio
+
+By default, everyone should have the same four-pane layout:
+
+1.  **Top left**: Source editor
+
+2.  **Bottom left**: Console (and Terminal and Background Jobs)
+
+3.  **Top Right**: Environment
+
+4.  **Bottom Right**: Files, Plots, Help, etc.
+
+### Customizing look & feel
+
+Feel free to customize your RStudio.\
+Go to Tools \> Global Options \> Appearance to select a color scheme you like.
+
+I also personally like to enable these:
+
+- Tools \> Global Options \> Code \> Insert matching parens/quotes
+
+- Tools \> Global Options \> Console \> Show syntax highlighting in console input
+
+I don't recommend rearranging your pane layout at this time.
+
+## Running Code
+
+Try running some code
+
+### Load Library
+
+```{r}
+library(ggplot2)
+
+```
+
+### Some scripting
+
+```{r}
+#This is a comment
+#Here we are assigning a value to a variable
+quiz1 <- 88
+quiz2 <- 94
+quiz3 <- 79
+
+quiz1
+
+#getting the average
+(quiz1 + quiz2 + quiz3) / 3
+
+#getting the mean
+mean(quiz1 + quiz2 + quiz3) #wrong cause your just adding them
+mean(quiz1, quiz2, quiz3) #wrong cause it only returns the mean of the first argument
+mean(c(quiz1, quiz2, quiz3))
+
+#creatig a variable that holds info
+list <- (c(quiz1, quiz2, quiz3))
+mean(list) #makes it easier and less repetative
+
+average <- mean(list)
+
+quiz3 <- 99
+
+average
+
+list <- c(quiz1, quiz2, quiz3)
+average <- mean(list)
+round(average, 2)
+
+```
+
+### More Coding
+
+```{r}
+#ctr, opt, I makes a new code block
+scores <- c(88, 94, 79, 91, 85)
+scores
+
+mean(scores)
+
+min(scores) #minimum
+
+max(scores) #maximum
+
+length(scores) #number of things in the list
+
+summary(scores)
+
+students <- c("Alice", "Bob", "Carter", "Dylan", "Ethan")
+students
+
+#bar plot
+barplot(scores, names.arg = students, ylim = c(0, 100), main = "Math Class", xlab = "Students", y = "Test Scores")
+```
+
+## Introducing `ggplot2`
+
+#### Make a Dataframe
+
+```{r}
+
+grades_df <- data.frame(student = students, score = scores)
+
+grades_df
+
+summary(grades_df)
+
+nrow(grades_df) #number of rows
+ncol(grades_df) #number of collumns
+dim(grades_df) #dimensions
+
+```
+
+#### Try ggplot
+
+```{r}
+
+ggplot(data = grades_df, aes(x = student, y = score))
+
+ggplot(data = grades_df, aes(x = reorder(student, +score), y = score, group = 1)) +
+  geom_col(fill = "navy") +
+  geom_point() +
+  geom_line() +
+  theme_minimal() +
+  labs(title = "Math Class",
+       subtitle = "Quiz Chapter 1",
+       x = "Students",
+       y = "Scores")
+
+```
+
+#### Mutate the Dataframe
+
+```{r}
+
+library(tidyverse)
+
+            #get this by hitting comand+shift+M 
+grades_df <- grades_df |>
+  mutate(study_hours = c(2, 5, 1, 4, 3))
+
+```
+
+#### Make a Scatterplot
+
+```{r}
+
+ggplot(data = grades_df, aes(x = study_hours, y = score)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "lightblue") +
+  geom_point(color = "navy") +
+  theme_classic() +
+  labs(title = "Study Observations",
+       subtitle = "What do you see?",
+       x = "Study Hours",
+       y = "Student Scores") +
+  geom_line(color = "navy")
+
+  
+#cannot use fill (use color instead), don't use reorder
+  
+```
+
+## Extra Credit (1pt)
+
+What result do you expect when you run this expression?
+
+```{r}
+
+1+1+1
+
+quiz1+ quiz2
+
+options(scipen = 999)
+
+print(0.1, 20)
+print(0.5, 20)
+
+#why does it return that number?
+0.1 + 0.1 + 0.1 - 0.3
+
+```
+
+What did you observe?
+
+> Answer:
+
+Why do you think this is happening? (You can look online for help)
+
+> Answer:

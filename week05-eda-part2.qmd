@@ -321,7 +321,8 @@ Looks like there are other factors that could affect `price` – not just `cut`.
 #| label: scatter plot of carat x price
 
 # try making the points transparent to 0.05
-
+ggplot(data = diamonds, aes(x = carat, y = price)) +
+  geom_point(alpha = 0.05)
 
 ```
 
@@ -391,6 +392,8 @@ ggplot(data = diamonds, aes(x = clarity, y = price)) +
   geom_boxplot()
 
 # clarity x carat
+ggplot(data = diamonds, aes(x = clarity, y = carat)) +
+  geom_boxplot()
 
 ```
 
@@ -404,16 +407,20 @@ Let's not forget about `cut`! Is there a relationship between `cut` and `carat`?
 #| label: explore cut
 
 # box plot of cut x price
-
+ggplot(data = diamonds, aes(x = cut, y = price)) +
+  geom_boxplot()
 
 # box plot of cut x carat
-
+ggplot(data = diamonds, aes(x = cut, y = carat)) +
+  geom_boxplot()
 
 # count plot
-
+ggplot(data = diamonds, aes(x = cut, y = carat)) +
+  geom_count()
 
 # violin plot
-
+ggplot(data = diamonds, aes(x = cut, y = carat)) +
+  geom_violin()
 
 ```
 

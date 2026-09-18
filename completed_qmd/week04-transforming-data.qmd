@@ -1,0 +1,241 @@
+---
+title: "Transforming Penguins Data"
+author: 
+  - "Shaylee Ferrer"
+  - "Amber Camp"
+  - "Connor Flynn"
+date: 9/9/26
+format: html
+editor: visual
+---
+
+# Transforming Data
+
+## Load Libraries
+
+```{r, message=FALSE}
+library(tidyverse) 
+library(palmerpenguins)
+library(janitor)
+library(plotly)
+```
+
+![](https://allisonhorst.github.io/palmerpenguins/logo.png){width="10%"}
+
+## Read in Data
+
+We'll continue with penguins for now! We'll read the data in and clean up the column names in a single code chunk below.
+
+```{r, message=FALSE}
+#| label: read data
+
+penguins_data <- read_csv("data/penguins_lter.csv")
+
+penguins_data <- penguins_data %>% 
+  clean_names()
+```
+
+## Interactive Data Visualization
+
+You got a preview of interactive data visualization in the last file (`week03-penguins-data.qmd`), so let's try another example, again with `plotly`.
+
+We'll start by creating a scatter plot of flipper length by body mass with `color = species` and `shape = island`.
+
+```{r, message=FALSE}
+#| label: try plotly
+
+ggplot(data = penguins_data, aes(x = flipper_length_mm, y = body_mass_g, color = species, shape = island)) +
+  geom_point()
+
+```
+
+```         
+```
+
+Let's add one more variable: `sex`. Can you think of a way to add another dimension of information in these visuals?
+
+Facets help us split a single plot into multiple panels, based on the values of a selected variable. Each panel shows a different “slice” of the data, making it easier to compare patterns across categories.
+
+```{r, message=FALSE, warning=FALSE}
+#| label: try faceting
+
+ggplot(data = penguins_data, aes(x = flipper_length_mm, y = body_mass_g, color = species, shape = island)) +
+  geom_point() +
+  theme(legend.position = "none") 
+  #facet_wrap(sex)
+
+
+```
+
+Wait. There appear to be four levels of the variable `sex` here (male, female, ".", and `NA`), when we only expected two.
+
+Confirm that by using the `unique()` function.
+
+```{r, message=FALSE}
+#| label: unique values
+
+unique(penguins_data$sex)
+
+```
+
+- If we wanted to know the number of penguins in each category for `sex`, we can use `table()`, however this does not include `NA`
+
+```{r, message=FALSE}
+#| label: create a table
+
+table(penguins_data$sex)
+
+```
+
+- We can use the `sum(is.na())` function to count the number of penguins with `NA` as the `sex`
+
+```{r, message=FALSE}
+#| label: count NAs
+
+sum(is.na(penguins_data$sex))
+
+```
+
+Let's filter for observations where `sex` is either male or female and drop observations with `NA` in that column, and save it to a new object.
+
+```{r, message=FALSE}
+#| label: filter
+
+male_female_only <- penguins_data |> 
+  filter(sex %in% c("MALE", "FEMALE")) |> 
+  drop_na(sex)
+
+```
+
+- Notice in our environment pane (top right) that our \# of observations went from 344 in the data frame `penguins_data` to 333 observation in `penguins_male_female`
+
+Let's make the same style of faceted scatter plot as above frombut with the new data frame. Can you make it interactive using `plotly`?
+
+```{r, message=FALSE}
+#| label: cleaned plot
+
+mf_plot <- ggplot(data = male_female_only, aes(x = flipper_length_mm, y = body_mass_g, color = species, shape = island)) +
+  geom_point() +
+  theme(legend.position = "none") 
+  facet_wrap(~sex)
+  
+ggplotly(mf_plot)
+
+mf_plot2 <- ggplot(data = male_female_only, aes(x = flipper_length_mm, y = body_mass_g, color = species, shape = island)) +
+  geom_point() +
+  theme(legend.position = "none") 
+  facet_grid(island~sex)
+
+ggplotly(mf_plot2)
+
+
+```
+
+Bonus: Instead of `facet_wrap()`, try using `facet_grid(island ~ sex)`. Now you have a grid layout with `island` on one axis and `sex` on the other.
+
+## Data Manipulation/Transformation
+
+Our first plots did not call for us to manipulate the data at all.
+
+How about if we wanted to make a bar graph of the *average body mass by species*? This is a two step process.
+
+1.  Create a new data frame called `average_mass` that has the average body mass for each penguin species. Use the `group_by()` and `summarise()` functions.
+
+```{r}
+#| label: avg mass
+
+average_mass <- male_female_only |>
+  group_by(species) |>
+  summarise(average_mass = mean(body_mass_g))
+
+```
+
+2.  Now, create a bar graph using the *new* data frame you made
+
+```{r}
+#| label: bar graph of avg mass
+
+ggplot(data = average_mass, aes(x = species, y = average_mass)) +
+  geom_bar(stat = "identity")
+
+```
+
+## Exercise 1
+
+In the code chunk below, create a new data frame called `average_flipper_length` that has the average flipper length for each species.
+
+Bonus: If you assign this to a new object name, you can then use `view(object_name)` to see your results as a table.
+
+```{r, message=FALSE}
+#| label: avg flipper length
+
+average_flipper_length <- male_female_only |>
+  group_by(species) |>
+  summarise(flipper_length = mean(flipper_length_mm))
+
+```
+
+In the code chunk below, plot `average_flipper_length` using `ggplot()` and `geom_bar`. Customize the graph with colors, a theme, and labels, etc., as you wish.
+
+```{r, message=FALSE}
+#| label: plot avg flipper length
+
+ggplot(data = average_flipper_length, aes(x = species, y = flipper_length, fill = species)) +
+  geom_bar(stat = "identity") +
+  theme_bw() +
+  labs(title = "Averge Flipper Length of Three Species of Penguins") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+  
+
+```
+
+## Exercise 2
+
+Create a boxplot of body mass by species & make the plot interactive
+
+- Hints: `geom_boxplot()`, `ggplotly()`
+
+```{r, message=FALSE, warning=FALSE}
+#| label: mass by species interactive
+
+boxplot <- ggplot(data = male_female_only, aes(x = species, y = body_mass_g, color = species)) +
+  geom_boxplot()
+ggplotly(boxplot)
+```
+
+## Exercise 3
+
+How many penguins live on each `island`? This one is a little tricky–think outside the box!
+
+- Hint: There are a few different ways, but you can use `summary()` to start.
+
+```{r, message=FALSE}
+#| label: count penguins
+
+unique(male_female_only$island)
+count <- ggplot(data = male_female_only, aes(x = island, fill = island)) +
+  geom_histogram(stat = "count")
+ggplotly(count)
+```
+
+## Exercise 4
+
+Create a data frame that has the average culmen depth for each species. Then, make a bar plot of the new data frame with species on the x-axis and average culmen depth on the y-axis
+
+```{r, message=FALSE}
+#| label: avg culmen depth by species
+
+final <- male_female_only |>
+  group_by(species) |>
+  summarise(average_culmen_depth = mean(culmen_depth_mm))
+ggplot(data = final, aes(x = species, y = average_culmen_depth)) +
+  geom_bar(stat = "identity")
+```
+
+## Push to GitHub!
+
+Use the RStudio to commit & push to GitHub. Ask for help if needed!
+
+## Note:
+
+Up until now, we’ve mostly *looked* at the data: visualizing it, exploring it with scatter plots and box plots, etc. But in order to answer more specific questions or clean up the data for analysis, we need to actually *transform* it, like filtering out bad rows, computing group averages, or creating new columns. That's where `dplyr` comes in, and that is what Assignment 3 is about.
