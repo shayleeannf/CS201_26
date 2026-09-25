@@ -1,0 +1,212 @@
+---
+title: "Assignment 4: Exploratory Data Analysis"
+author: "Shaylee-Ann Billaber-Ferrer"
+date: "September 25, 2026"
+format: html
+editor: visual
+---
+
+## Overview
+
+Due: **Friday 9/25 11:59pm**
+
+In this assignment, you will practice Exploratory Data Analysis (EDA) by making plots from a **Kaggle dataset of your choice**.
+
+You will submit **at least 4 different plot types**, with short written interpretations for each.
+
+Part 1 is worth a total of 1 point, and Part 2 is worth 4 points (1 point for each plot, question, and interpretation).
+
+## Part 1: Get Your Data
+
+1.  Go to [Kaggle Datasets](https://www.kaggle.com/datasets), create an account, and choose a dataset that interests you. Ensure your data has:
+    1.  At least 4 variables
+    2.  At least one categorical and one continuous variable
+    3.  I recommend data that contains at least 50-100 observations
+    4.  Tip: Open the CSV on Kaggle first and skim the columns to check that it meets these requirements
+2.  Download the dataset as a CSV file.
+3.  Place the CSV in your class R project `data` folder.
+4.  Read it into R with `read_csv()`.
+
+```{r, message=FALSE}
+library(tidyverse)
+library(janitor)
+
+# mydata <- read_csv("data/your_dataset.csv")
+housing_data <- read_csv("data/housing_data.csv")
+```
+
+### Describe your data
+
+Data author: Justin Tyndall, Trey Gordner, Rachel Inafuku, and JoonYup Park (Researchers at the University of Hawaii Economic Research Organization)
+
+Link:
+
+Their research factbook
+
+- <https://uhero.hawaii.edu/the-hawaii-housing-factbook-2026/>
+
+Downloadable Data
+
+- <https://analytics.uhero.hawaii.edu/housing/factsheet-builder>
+
+Description:
+
+Residents of Hawai‘i face the highest housing costs in the nation. High housing costs lower the standard of living for residents. Some households are forced to live in crowded conditions, some leave the state to find housing elsewhere, and some are forced to survive without housing at all. To inform discussions on the way forward for housing in Hawai‘i, UHERO released the updated second edition of its annual report on the state of housing. Users can explore housing market data across Hawai‘i’s neighborhoods.
+
+### Preview your data
+
+Use some of the strategies you've learned in this class or picked up elsewhere to summarize and quickly explore your data.
+
+```{r}
+# Summary of the data
+summary(housing_data)
+
+# Summary of the columns in our dataset
+skim_data <- skimr::skim(housing_data)
+view(skim_data)
+
+#Dropping the column Median rent (Source: Craigslist) because we already have a Median rent column that gives us all the info we need with no N/A values
+housing_data <- housing_data |> 
+  select(-'Median rent (Source: Craigslist)')
+
+# clean up the names
+housing_data <- housing_data |> 
+  clean_names()
+```
+
+### Summary stats
+
+Before you make plots, you must also:
+
+- Show basic summaries of your dataset, including:
+
+  - `count()` for categorical variables (to see category frequencies)
+
+  - `mean()`, `median()`, `sd()`, `min()`, `max()` for at least one numeric variable
+
+  - Remember to use `na.rm = TRUE` if you have missing values that affect summaries!
+
+```{r}
+# It is a standard benchmark that no more than 30% of your monthly income should go towards paying rent so let's see how many are able to live acording to this per area in our dataset.
+
+count_income_rent <- housing_data |> 
+  filter((median_household_income / 12) * 0.3 >= median_rent_source_census_bureau) |> 
+  count(area)
+
+# Calculating numeric summary for the Native Hawaiian/ Pacific Islander column
+mean = mean(housing_data$native_hawaiian_pacific_islander)
+median = median(housing_data$native_hawaiian_pacific_islander)
+standard_deviation = sd(housing_data$native_hawaiian_pacific_islander)
+minimum = min(housing_data$native_hawaiian_pacific_islander)
+maximum = max(housing_data$native_hawaiian_pacific_islander)
+```
+
+**What do the category counts tell you?**
+
+The category counts tell me the number of observations in each area where housing is considered affordable according to the 30% benchmark. The observations can be looked at the specific years in our dataset, since we have 11 years of data, 11 is the maximum value meaning that for all 11 years, the median rent was less than or equal to 30% of the monthly median household income.
+
+**What does the numeric summary show about spread, center, or outliers?**
+
+The median (7.6) is the middle value in the dataset. The mean, or average, of the dataset is (11.17). Since this value is higher than the median, it could mean that we have large outlier values. The high standard deviation value (9.2) tells us that our data is very spread out from the mean. From this summary, we can see that the data has a right-skewed distribution since there's a long tail stretching to the right.
+
+## Part 2: Visualize Your Data
+
+Create **at least 4 plots**, each of a different type. Your plots may share variables, but each one should answer a **different question** about your data. At least one plot must include a variable that isn't in the others.
+
+Each plot should have:
+
+- A title and labeled axes
+
+- A short interpretation (2-3 sentences) underneath
+
+  - Sample interpretation: (boxplot of `price` by `cut` from `diamonds` data): *Ideal diamonds have the lowest median price, which is surprising since Ideal is the best cut. Every cut also has a lot of very expensive outliers. One possible reason for the low Ideal prices is that Ideal diamonds might be smaller on average, which I could check by plotting carat by cut.*
+
+Use the EDA Part 3 notes as your reference. Since this is an EDA assignment, your plots can look plain, but consider adding colors, themes, or interactivity for interpretability and visual appeal if you know how.
+
+### Plot 1
+
+```{r}
+# insert code here
+ggplot(housing_data, aes(x = year, y = median_single_family_home_price, color = area)) +
+  geom_line() +
+  facet_wrap(~ area, ncol = 5) +
+  labs(
+    title    = "Median Price of Single Family Home Per Year on the Island of Oahu",
+    subtitle = "Colored by Area",
+    x        = "Year",
+    y        = "Price (USD)") +
+  scale_x_continuous(breaks = seq(2014, 2024, by = 2)) +
+  theme(legend.position = 'none')
+```
+
+Question this plot answers: What is the median price history of a single family home per area in our dataset?
+
+Interpretation: (The graph is much easier to see if you open it as a file) The Ala Moana area has had the most significant price differences over the years. All areas have risen in price over the years.
+
+### Plot 2
+
+```{r}
+
+ggplot(housing_data, aes(x = median_household_income, y = median_rent_source_census_bureau)) +
+  geom_point() +
+  labs(
+    title = 'Rental Price vs. Household Income on the Island of Oahu',
+    x = 'Median Household Income (USD)',
+    y = 'Median Rent (USD)'
+  ) +
+  geom_smooth(method = "lm", se = FALSE) +
+  theme_light()
+```
+
+Question this plot answers: What is the relationship between the annual median household income and the monthly rent?
+
+Interpretation: As the household income increases, the median rent also increases. This makes sense because as people make more money, they are able to afford higher rent prices and generally, the higher rent prices have more rooms for the multiple people contributing to the household income.
+
+### Plot 3
+
+```{r}
+# insert code here
+ggplot(housing_data, aes(group = year, x = factor(year), y = factor(unemployment_rate))) +
+  geom_violin() +
+  geom_boxplot(alpha = 0.7, width = 0.5) +
+  labs(
+    title = 'Distribution of Unemployment Rate from 2014-2024 on the Island of Oahu',
+    x = 'Year',
+    y = 'Unemployment Rate'
+  ) +
+  theme_classic()
+```
+
+Question this plot answers: What does the distribution and shape of the unemployment rate look like from 2014-2024?
+
+Interpretation: Over the years, we can see that the unemployment rate rose and fell by the bold median value line in our box plots. The bulk of our data falls between 1 and 6 percent. We have many high outlier values that make our graph positively skewed.
+
+### Plot 4
+
+```{r}
+
+housing_data_2020 <- housing_data |> 
+  filter(year == 2020)
+
+ggplot(housing_data_2020, aes(x = area, y = native_hawaiian_pacific_islander, fill = area)) +
+  geom_col() +
+  coord_flip() +
+  labs(
+    title = "Percent of Native Hawaiian/Pacific Islander's living in each area on Oahu",
+    y = 'Population in Percent',
+    x = 'Area'
+  ) +
+  theme_light() +
+  theme(legend.position = "none")
+
+```
+
+Question this plot answers: What is the percent of native Hawaiian or pacific islander population living in each of the areas on Oahu in 2020?
+
+Interpretation: The areas with the highest percentage of Hawaiian population include Waiānae, Waimānalo, and Kahuku. The areas with the least percentage of Hawaiian population include Āina Haina, Salt Lake, and Waikīkī.
+
+------------------------------------------------------------------------
+
+# Push to GitHub AND submit link on Canvas!!
+
+Assignment is due Friday 9/25 at 11:59 pm.
