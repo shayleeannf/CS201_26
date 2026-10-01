@@ -1,0 +1,307 @@
+---
+title: "Assignment 5: Substance Use Treatment Mapping"
+subtitle: "Shaylee-Ann Billaber-Ferrer"
+author: "Amber Camp"
+date: "Sep 30, 2026"
+format: html
+editor: visual
+toc: true
+---
+
+## Overview
+
+Due: **Friday 10/2, 11:59pm**
+
+In this assignment, you will apply analytic and mapping skills to the 2024 TEDS-D dataset from SAMHSA.
+
+Refer to the following files for reference, though some of what is asked of you here will require logic beyond what we discussed in class:
+
+- week06-treatment-mapping-part1.qmd
+
+- week06-treatment-mapping-part2.qmd
+
+**Before you start:** keep the [codebook](https://www.samhsa.gov/data/system/files/media-puf-file/TEDS-D-2024-DS0001-info-codebook_v1_0.pdf) open in another tab. Every question below depends on knowing what the values in a column actually mean. Don't assume — look it up.
+
+**Time estimate:** about three-four hours total. Question 1 should take you ten minutes. If you are stuck on one thing for more than twenty minutes, ask your classmates or get in touch with me. Being stuck is normal. Staying stuck quietly by yourself is not :)
+
+## Load Packages and Data
+
+```{r}
+#| label: setup
+#| message: false
+#| warning: false
+
+library(tidyverse)
+library(janitor)
+library(sf) # "simple features" for spatial data
+library(urbnmapr) # access to US state/country shapefiles for mapping
+library(ggiraph) # makes ggplot charts interactive
+options(scipen = 99) # turns off scientific notation
+```
+
+This is the cleaned dataset you saved at the end of Part 1.
+
+```{r}
+#| label: read-data
+
+teds_d <- readRDS("data/teds_d_clean.rds")
+```
+
+## Question 1: Warm-up
+
+Before mapping anything, get oriented in the data.
+
+a)  Using `tabyl()`, show the breakdown of `reason` (reason for discharge). Which reason is most common, and what percentage of all discharges does it account for?
+
+b)  Make one bar chart showing the number of discharges by `services_d` (type of treatment service). Give it an informative title and axis labels.
+
+c)  In a sentence or two: what does the `reason` value "Transferred to another treatment program or facility" mean for our completion percentages? If a state transfers a lot of patients, would its completion rate look higher or lower than a state that transfers very few?
+
+> **Full credit:** a working `tabyl()`, a readable labeled bar chart, and a sentence or two showing you thought about part (c). There is no trick in this question!
+
+```{r}
+#| label: q1
+
+#Part A
+teds_d %>% 
+  tabyl(reason) 
+
+#Part B
+ggplot(data = teds_d, aes(y = fct_infreq(services_d))) +
+  geom_bar() +
+  labs(
+    title = "Number of Discharges per Treatment Service",
+    y = "Treatment Service",
+    x = "Number of Discharges"
+  )
+
+```
+
+**Answer to (a):** The most common reason for discharge is "Treatment completed." It counts for 47.8% of all discharges.
+
+**Answer to (b):** (produce a bar chart in the code chunk above)
+
+**Answer to (c):** If a state transfers a lot of patients from one state to another, their completion rate percentage over their total cases would be lower than another state.
+
+## Question 2: Mapping no use at discharge
+
+Make **one [*interactive*]{.underline} map** with `ggiraph` showing, for each state, the percentage of [completed treatment]{.underline} episodes that ended with [no use at discharge]{.underline}.
+
+In other words: among the episodes where `reason` is "Treatment completed," what share had `freq1_d` equal to "no use"?
+
+Work through this in bite-sized steps, like we did in Part 2. You will need to filter, group, summarize, build an index, join, and plot. Write one step at a time and look at the result before moving on.
+
+### The denominator decision
+
+About a third of the `freq1_d` values in this dataset are "unknown." That means you have to decide what your denominator is, and there is more than one defensible answer:
+
+- **All** completed episodes, counting "unknown" in the denominator, or
+
+- Only completed episodes where frequency of use was **actually recorded**.
+
+Pick one. **Below your map, write one sentence saying which denominator you used and why.** Either choice can earn full credit. Missing description earns no points for this portion.
+
+### Your map must:
+
+- be interactive (rendered with `girafe()`)
+
+- show a tooltip with the state name and the percentage, rounded to two decimal places
+
+- have a title and a legend label that say what is being shown
+
+- handle states with no data honestly (remember Friday in class)
+
+> **Full credit:** one interactive map meeting the four requirements above, plus your denominator sentence. It does not have to be beautiful, only correct and readable.
+
+```{r, message=FALSE, warning=FALSE}
+#| label: q2
+
+#Filtering teds_d and grabbing the data we want
+percent_completed_by_state <- teds_d |>
+  filter(reason == "Treatment completed") |> 
+  group_by(stfips) |> 
+  summarize(total_cases = n(),
+            completed_cases = sum(freq1_d == "no use")) |>
+  mutate(percentage_completed = (completed_cases / total_cases) * 100)
+
+#Reading in the states map data
+states_map <- get_urbn_map(map = "states", sf = TRUE)
+
+#Building an index
+percent_completed_by_state <- percent_completed_by_state |>
+  mutate(state_fips = sprintf("%02d", stfips))
+
+#Joining the states_map data and percent_completed_by_state data
+mapping_data <- full_join(percent_completed_by_state,
+                          states_map,
+                          by = "state_fips")
+
+#Adding a column to split percentages into bins
+mapping_data <- mapping_data |> 
+  mutate(percentage_bin = cut(percentage_completed, breaks=c(0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100)))
+
+#Plotting and creating an interactive graph
+completed_treatment_map_int <- ggplot(mapping_data) +
+  geom_sf_interactive(mapping = aes(geometry = geometry,
+                                    fill = percentage_bin,
+                                    tooltip = paste("State Abbreviation:", state_abbv,
+                                                    "<br>State FIPS:", stfips, 
+                                                    "<br>Completed:", round(percentage_completed,2), "%")),
+                      color = "black",
+                      linewidth = 0.25) + 
+  labs(fill = "% of Completed Treatment Episodes",
+       title = "% of Completed Treatment Episodes that Ended With No Use at Discharge") +
+  scale_fill_viridis_d(option = "mako", direction = -1) +
+  coord_sf(datum = NA) + 
+  theme_minimal() +
+  theme(legend.text = element_text(size = 10),
+        legend.title = element_text(size = 12),
+        plot.title = element_text(size = 16))
+
+
+# Use `girafe` to render the interactive plot
+girafe(ggobj = completed_treatment_map_int, width_svg = 8, height_svg = 5)
+
+```
+
+**Denominator I used, and why:** The denominator I chose was to include all of the cases, even the unknown ones because in the end, they are still cases of actual people that had a frequency of use during discharge, we just don't know what it is.
+
+## Question 3: Service type and length of stay
+
+Treatment outcomes can vary depending on the type of service a patient receives and how long they stay in treatment.
+
+Investigate how **completion rates** differ across **service type** (`services_d`) and **length of stay** (`los`).
+
+- Create **two** visualizations: at least one focused on service type, and at least one focused on length of stay. These do not need to be maps, and they do not need to be interactive. Pick whatever chart type makes the pattern easiest to see.
+
+- Then write a short summary (3-ish sentences, full grammatical sentences) explaining the main patterns you observe.
+
+**One warning:** look up `los` in the codebook *before* you calculate anything with it. Code that runs without an error can still give you a meaningless answer.
+
+> **Full credit:** two labeled visualizations that actually show the comparison you say they show, plus a summary that describes a real pattern in your own output. You are not graded on finding the "right" pattern. You are graded on whether your summary matches your charts.
+
+```{r, message=FALSE, warning=FALSE}
+#| label: q3
+
+#Filtering teds_d for the values we need: the percentage of completed cases grouped by services_d
+services_d_filtered <- teds_d |> 
+  group_by(services_d) |> 
+  summarize(
+    completion = sum(reason == "Treatment completed"),
+    total = n(),
+    completion_rate = (completion / total)
+  )
+
+#Creating the first visual
+ggplot(data = services_d_filtered, aes(x = fct_reorder(services_d, completion_rate), y = completion_rate, fill = "pink")) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    title = "Percent Completion Rate Across Service Type",
+    y = "Percent Completion Rate",
+    x = "Service Type"
+  ) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_bw()
+
+#Looking at the spread of data in los column
+table(teds_d$los)
+teds_d %>% count(los, sort = TRUE)
+
+#From the results I'm going to change the values of 31-37 to their true values using case_when(), used help from google gemini
+teds_d <- teds_d %>% 
+  mutate(los_num = as.numeric(as.character(los)),
+         los = case_when(
+           los_num >= 1 & los_num <= 14 ~ "1-14",
+           los_num >= 15 & los_num <= 30 ~ "15-30",
+           los_num == 31 ~ "31-45",
+           los_num == 32 ~ "46-60",
+           los_num == 33 ~ "61-90",
+           los_num == 34 ~ "91-120",
+           los_num == 35 ~ "121-180",
+           los_num == 36 ~ "181-365",
+           los_num == 37 ~ "366 or more",
+           TRUE ~ as.character(los)
+         ),
+         los = factor(los, levels = c(
+           "1-14", "15-30", "31-45", "46-60", "61-90", "91-120", "121-180", "181-365", "366 or more"
+         ))) |> 
+  select(-los_num)
+
+#Filtering los for the values we need: the percentage of completed cases grouped by los
+los_filtered <- teds_d |> 
+  group_by(los) |> 
+  summarize(
+    completion = sum(reason == "Treatment completed"),
+    total = n(),
+    completion_rate = (completion / total)
+  )
+
+#Creating the second visual
+ggplot(data = los_filtered, aes(x = los, y = completion_rate, group = 1)) +
+  geom_line(color = "salmon") +
+  labs(
+    title = "Percent Completion Rate Across Length of Stay",
+    y = "Percent Completion Rate",
+    x = "Length of Stay (Days)"
+  ) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_bw()
+
+```
+
+**Summary:**
+
+For the first visual "Percent Completion Rate Across Service Type" we are able to see which service type has the highest completion rate and which has the lowest. The service type with the highest completion rate is the 24-hour detox hospital inpatient and the one with the lowest completion rate is the ambulatory, intensive outpatient. From reading the code book, I can see a trend where the completion rate is higher for patients that stay in a hospital facility or "safe withdrawal environment."
+
+For the second visual "Percent Completion Rate Across Length of Stay" we are able to see how length of stay effects completion rate. There is a relatively downwards trend meaning as your length of stay increases, your completion rate decreases. The peak in our graph happens at the 15-30 day mark while it rapidly declines at the 121-180 day mark.
+
+## Extra Credit (optional, up to 2 pts)
+
+#### Again, this is meant to *stretch* you, not *stress* you!
+
+Make one visualization that shows service type and length of stay **together**–that is, how completion rate varies across both at once. Faceting is one way, but there are others.
+
+Then, in a sentence, say what this combined view shows that your two separate charts in Question 3 could not.
+
+```{r}
+#| label: extra-credit
+
+#Using the cowplot package to render two plots next to each other
+install.packages("cowplot")
+library(cowplot)
+
+#Assigning our graphs from earlier to a variable
+
+plot_1 <- ggplot(data = los_filtered, aes(x = los, y = completion_rate, group = 1)) +
+  geom_line(color = "salmon") +
+  labs(
+    title = "Percent Completion Rate Across Length of Stay",
+    y = "Percent Completion Rate",
+    x = "Length of Stay (Days)"
+  ) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_bw()
+
+plot_2 <- ggplot(data = services_d_filtered, aes(x = fct_reorder(services_d, completion_rate), y = completion_rate, fill = "pink")) +
+  geom_col(show.legend = FALSE) +
+  coord_flip() +
+  labs(
+    title = "Percent Completion Rate Across Service Type",
+    y = "Percent Completion Rate",
+    x = "Service Type"
+  ) +
+  scale_y_continuous(labels = scales::percent_format()) +
+  theme_bw()
+
+#pulling up the full visualization in a new window makes it easier to see
+plot_grid(plot_1, plot_2, labels = c("A", "B"), ncol = 2)
+```
+
+**What the combined view adds:**
+
+------------------------------------------------------------------------
+
+## Push to GitHub AND submit link on Canvas!
+
+Assignment is due **Friday 10/2, 11:59pm**.
